@@ -11,7 +11,7 @@ This PowerShell script reads an Excel file containing configuration data and gen
 ## How to use the script
 1. Clone or download this repository to your local computer.
 2. Open the `config_template.cnf` file and paste in the required configuration. Specify variables within the configuration by surrounding the config in square brackets, i.e. [variable1], [variable2] etc. The file currently includes an example that should be overwritten with the required data.
-3. Open the Excel file named `data.xlsx'. The headings in the first row should contain the names of the variables you defined in Step 2. Add the data that you wish to replace the variables under each heading. Again, overwrite the data with your requirements.
+3. Open the Excel file named `data.xlsx`. The headings in the first row should contain the names of the variables you defined in Step 2. Add the data that you wish to replace the variables under each heading. Again, overwrite the data with your requirements.
 4. Run the script by opening PowerShell and navigating to the folder where the script is located. Then, run the following command:
 `.\WinConfigMaster.ps1`
 

@@ -1,0 +1,28 @@
+service tcp-keepalives-in
+service tcp-keepalives-out
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec localtime
+service password-encryption
+!
+hostname [Hostname]
+!
+!
+!
+interface Vlan90
+ description Network_Management
+ ip address [IP Address] 255.255.255.0
+ no ip proxy-arp
+!
+snmp-server trap-source Vlan90
+snmp-server location [Location]
+snmp-server enable traps
+!
+ntp server 10.0.0.1
+ntp server 10.0.0.2
+!
+!
+!
+!
+!
+!
+end

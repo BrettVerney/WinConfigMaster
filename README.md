@@ -17,11 +17,15 @@ This PowerShell script reads an Excel file containing configuration data and gen
 
 This will read the configuration data from `data.xlsx` and create a text-based configuration file for each row in the Excel file using the template configuration file located at `config_template.cnf`. The script will ignore rows containing blank cells under a column with a heading specified and not create config files for these rows.
 
-Note: If you see an error message like "File cannot be loaded because the execution of scripts is disabled on this system", you need to enable PowerShell script execution by running the following command in an elevated PowerShell session:
+Note: If you see an error message like "File cannot be loaded because the execution of scripts is disabled on this system", you need to enable PowerShell script execution by running wither of the following commands in an elevated PowerShell session:
 
-`Set-ExecutionPolicy RemoteSigned`
+<b>Bypass the default execution policy for the current user:</b><br>
+`Set-ExecutionPolicy Bypass -Scope CurrentUser -Force`
 
-This will allow scripts to be executed on your computer that are signed by a trusted publisher.
+<b>Bypass the execution policy for the current PowerShell session only:</b><br>
+`Set-ExecutionPolicy Bypass -Scope Process -Force`
+
+This will allow scripts to be executed on your computer.
 
 The resulting configuration files will be created in the working directory where the script was executed, with the filename from the value in column A of the Excel file, followed by a timestamp in the format -yyyy-MM-dd-HHmm.
 

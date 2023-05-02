@@ -1,8 +1,8 @@
 # WinConfigMaster
 PowerShell script used to create bulk text-based configuration files.
 
-Author: Brett Verney
-Version: v1.0 | 2-05-2023
+<b>Author:</b> Brett Verney<br>
+<b>Version:</b> v1.0 | 2-05-2023
 
 ## Introduction
 This PowerShell script reads an Excel file containing configuration data and generates a text-based configuration file for each row. The output file is created by replacing variables in a template configuration file with the values from the corresponding row in the Excel file. The output file is named after the values specified in column A of the Excel file, with a timestamp appended to it.

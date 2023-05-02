@@ -26,7 +26,7 @@ This will allow scripts to be executed on your computer that are signed by a tru
 The resulting configuration files will be created in the working directory where the script was executed, with the filename from the value in column A of the Excel file, followed by a timestamp in the format -yyyy-MM-dd-HHmm.
 
 ## Limitations
-The script assumes that only one worksheet in the Excel file contains the configuration data.
-The script assumes that the Excel file's first row contains the variables' names that will be replaced in the template file.
-The variables in the template configuration file should be enclosed in square brackets, like [variable].
-The filename in column A of the Excel file should not contain any square brackets.
+- The script assumes that only one worksheet in the Excel file contains the configuration data.
+- The script assumes that the Excel file's first row contains the variables' names that will be replaced in the template file.
+- The variables in the template configuration file should be enclosed in square brackets, like [variable].
+- The filename in column A of the Excel file should not contain any square brackets.

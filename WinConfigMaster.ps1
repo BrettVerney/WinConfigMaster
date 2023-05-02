@@ -3,12 +3,12 @@
 This script creates text-based configuration files in bulk based on an Excel data source.
 
 .DESCRIPTION
-The script reads an Excel file containing configuration data and generates a text-based configuration file for each row in the file. The output file is created by replacing variables in a template configuration file with the values from the corresponding row in the Excel file. The output file is named after the filename in column A of the Excel file, with a timestamp appended to it.
+This script reads an Excel file containing configuration data and generates a text-based configuration file for each row. The output file is created by replacing variables in a template configuration file with the values from the corresponding row in the Excel file. The output file is named after the values specified in column A of the Excel file, with a timestamp appended to it.
 
 .EXAMPLE
-PS C:\> .\Create-ConfigFiles.ps1
+PS C:\> .\WinConfigMaster
 
-This example reads the configuration data from "C:\Data\config.xlsx" and creates a text-based configuration file for each row in the Excel file, using the template configuration file located at "C:\Data\config_template.txt".
+This example reads the configuration data from "data.xlsx" and creates a text-based configuration file for each row in the Excel file, using the template configuration file "config_template.txt" located in the same directory.
 
 .NOTES
 Dependencies:

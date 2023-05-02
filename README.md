@@ -15,7 +15,7 @@ This PowerShell script reads an Excel file containing configuration data and gen
 4. Run the script by opening PowerShell and navigating to the folder where the script is located. Then, run the following command:
 `.\WinConfigMaster.ps1`
 
-This will read the configuration data from data.xlsx and create a text-based configuration file for each row in the Excel file using the template configuration file located at config_template.cnf. The script will ignore rows containing blank cells under a column with a heading specified and not create config files for these rows.
+This will read the configuration data from `data.xlsx` and create a text-based configuration file for each row in the Excel file using the template configuration file located at `config_template.cnf`. The script will ignore rows containing blank cells under a column with a heading specified and not create config files for these rows.
 
 Note: If you see an error message like "File cannot be loaded because the execution of scripts is disabled on this system", you need to enable PowerShell script execution by running the following command in an elevated PowerShell session:
 

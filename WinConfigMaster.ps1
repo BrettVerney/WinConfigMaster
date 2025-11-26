@@ -1,100 +1,141 @@
 <#
 .SYNOPSIS
-This script creates text-based configuration files in bulk based on an Excel data source.
+Generates configuration files in bulk based on Excel data and a template file.
 
 .DESCRIPTION
-This script reads an Excel file containing configuration data and generates a text-based configuration file for each row. The output file is created by replacing variables in a template configuration file with the values from the corresponding row in the Excel file. The output file is named after the values specified in column A of the Excel file, with a timestamp appended to it.
-
-.EXAMPLE
-PS C:\> .\WinConfigMaster
-
-This example reads the configuration data from "data.xlsx" and creates a text-based configuration file for each row in the Excel file, using the template configuration file "config_template.txt" located in the same directory.
+This script reads configuration data from an Excel file and uses a template configuration file to generate text-based configuration files. Each row in the Excel file corresponds to a new configuration file.
 
 .NOTES
 Dependencies:
-- Microsoft Excel (to read the Excel file)
+- Microsoft Excel (COMObject)
 
-Limitations:
-- The script assumes that the first row in the Excel file contains the names of the variables that will be replaced in the template file.
-- The script assumes that there is only one worksheet in the Excel file that contains the configuration data.
-
-Assumptions:
-- The variables in the template configuration file should be enclosed in square brackets, like [variable].
-- The filename in column A of the Excel file should not contain any square brackets.
-
-Version: 1.0	
-Author: Brett Verney	
-Date: May 5, 2023
+Version: 1.5
+Author: Brett Verney
+Date: 28 November 2024
 #>
 
 # Start timer
 $timer = Measure-Command {
-    # Read data from config_template.cnf
-    $config = Get-Content config_template.cnf | Out-String
+    $excel = $null
+    $workbook = $null
+    try {
+        # Constants
+        $excelFilePath = "$PWD\data.xlsx"
+        $templateFilePath = "$PWD\config_template.cnf"
+        $outputDirectory = "$PWD\GeneratedConfigs"
 
-    # Load Excel data
-    $excel = New-Object -ComObject Excel.Application
-    $workbook = $excel.Workbooks.Open("$PWD\data.xlsx")
-    $worksheet = $workbook.Sheets.Item(1)
-    $range = $worksheet.UsedRange
-
-    # Initialize counter
-    $fileCount = 0
-
-    # Iterate over each row in the Excel data
-    for ($i = 2; $i -le $range.Rows.Count; $i++) {
-        # Get the filename from column A
-        $filename = $worksheet.Cells.Item($i, 1).Value2
-        if (!$filename) {
-            continue # Ignore rows with blank filename
+        # Verify template file exists
+        if (!(Test-Path -Path $templateFilePath)) {
+            throw "Template file not found: $templateFilePath"
         }
 
-        # Check if any cells in the row are blank
-        $allCellsValid = $true
-        for ($j = 2; $j -le $range.Columns.Count; $j++) {
-            $cellValue = $worksheet.Cells.Item($i, $j).Value2
-            if (!$cellValue) {
-                $allCellsValid = $false
-                break
+        # Read the template configuration file
+        $configTemplate = Get-Content $templateFilePath -Raw
+
+        # Ensure the output directory exists
+        if (!(Test-Path -Path $outputDirectory)) {
+            New-Item -Path $outputDirectory -ItemType Directory | Out-Null
+            Write-Host "Created directory: $outputDirectory"
+        }
+
+        # Open Excel file in read-only mode
+        if (!(Test-Path -Path $excelFilePath)) {
+            throw "Excel file not found: $excelFilePath"
+        }
+
+        $excel = New-Object -ComObject Excel.Application
+        $excel.Visible = $false  # Ensure Excel is hidden
+        $workbook = $excel.Workbooks.Open($excelFilePath, [System.Reflection.Missing]::Value, $true)  # Open read-only
+        $worksheet = $workbook.Sheets.Item(1)
+        $range = $worksheet.UsedRange
+
+        # Validate worksheet data
+        if ($range.Rows.Count -lt 2 -or $range.Columns.Count -lt 1) {
+            throw "Excel file is missing data or headers."
+        }
+
+        # Process each row
+        $fileCount = 0
+        for ($rowIndex = 2; $rowIndex -le $range.Rows.Count; $rowIndex++) {
+            # Get filename from column A
+            $filename = $worksheet.Cells.Item($rowIndex, 1).Value2
+            if ([string]::IsNullOrWhiteSpace($filename)) {
+                Write-Host "Skipping row ${rowIndex}: Blank filename."
+                continue
+            }
+
+            # Check for blanks in other cells
+            $rowDataValid = $true
+            for ($colIndex = 2; $colIndex -le $range.Columns.Count; $colIndex++) {
+                if ([string]::IsNullOrWhiteSpace($worksheet.Cells.Item($rowIndex, $colIndex).Value2)) {
+                    $rowDataValid = $false
+                    break
+                }
+            }
+
+            if (-not $rowDataValid) {
+                Write-Host "Skipping row ${rowIndex}: Contains blank cells."
+                continue
+            }
+
+            # Generate config by replacing placeholders
+            $outputConfig = $configTemplate
+            for ($colIndex = 1; $colIndex -le $range.Columns.Count; $colIndex++) {
+                $placeholder = $worksheet.Cells.Item(1, $colIndex).Value2
+                $value = $worksheet.Cells.Item($rowIndex, $colIndex).Value2
+                # Handle numeric and null values explicitly
+                if ($value -eq $null) {
+                    $value = ""  # Replace null values with an empty string
+                } elseif ([int]::TryParse($value, [ref]$null)) {
+                    $value = $value.ToString()  # Ensure numeric values are treated as strings
+                }
+                if ($placeholder -and $value) {
+                    $outputConfig = $outputConfig.Replace("{$placeholder}", $value)
+                }
+            }
+
+            # Generate output filename
+            $timestamp = Get-Date -Format "yyyy-MM-dd-HHmm"
+            $outputFilename = "$filename-$timestamp.txt"
+            $outputFilePath = Join-Path -Path $outputDirectory -ChildPath $outputFilename
+
+            # Save to file
+            $outputConfig | Out-File -FilePath $outputFilePath -Encoding UTF8
+            Write-Host "Generated file: $outputFilename"
+
+            $fileCount++
+        }
+
+        # Close Excel
+        $workbook.Close($false)
+        $workbook = $null
+        $excel.Quit()
+        Write-Host "$fileCount configuration files created successfully."
+
+    } catch {
+        Write-Error "An error occurred: $_"
+    } finally {
+        # Ensure Excel is always properly released
+        if ($workbook) {
+            try {
+                $workbook.Close($false) | Out-Null
+            } catch {
+                Write-Host "Failed to close workbook. Continuing cleanup."
             }
         }
-
-        # If any cells are blank, skip creating a file
-        if (!$allCellsValid) {
-            Write-Host "Skipping row $i because it contains blank cells."
-            continue
-        }
-
-        # Create a copy of the config file with variables replaced by Excel data
-        $output = $config
-        for ($j = 1; $j -le $range.Columns.Count; $j++) {
-            $varName = $worksheet.Cells.Item(1, $j).Value2
-            $varValue = $worksheet.Cells.Item($i, $j).Value2
-            if ($varName -and $varValue) {
-                $output = $output.Replace("[$varName]", $varValue)
+        if ($excel) {
+            try {
+                $excel.Quit() | Out-Null
+            } catch {
+                Write-Host "Failed to quit Excel application. Continuing cleanup."
             }
+            [System.Runtime.InteropServices.Marshal]::ReleaseComObject($excel) | Out-Null
         }
-
-        # Add timestamp to filename
-        $timestamp = Get-Date -Format "-yyyy-MM-dd-HHmm"
-        $outputFilename = "$filename$timestamp.txt"
-
-        # Save the output to a file with the updated filename
-        $outputPath = "$PWD\$outputFilename"
-        $output | Out-File $outputPath
-
-        # Increment counter
-        $fileCount++
+        $excel = $null
+        [GC]::Collect()
+        [GC]::WaitForPendingFinalizers()
     }
-
-    # Clean up
-    $workbook.Close()
-    $excel.Quit()
-    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
-
-    # Print file count
-    Write-Host "$fileCount config files created."
 }
 
-# Print time taken
-Write-Host "Time taken: $($timer.TotalSeconds) seconds."
+# Output elapsed time
+Write-Host "Execution completed in $($timer.TotalSeconds) seconds."
